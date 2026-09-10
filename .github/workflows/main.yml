@@ -1,0 +1,39 @@
+name: Deploy Odoo - taller
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch: 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+   steps:
+      - name: Desplegar en AWS
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets. }}
+          username: ${{ secrets. }}
+          key: ${{ secrets. }}
+
+          script: |
+            set -e
+
+            echo "Actualizando codigo"
+
+            cd /mnt/extra-addons/taller
+
+            git fetch origin main
+            git reset --hard orgin/main
+            
+            echo "Actualizado modulo de Odoo"
+
+            docker exec odoo odoo -d "${{ secrets. }} -u taller --stop-after-init
+
+
+            docker restart testing
+      
+      
