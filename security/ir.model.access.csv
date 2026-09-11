@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_taller_cliente_user,taller.cliente.user,model_taller_cliente,base.group_user,1,1,1,1
+access_taller_maquinaria_user,taller.maquinaria.user,model_taller_maquinaria,base.group_user,1,1,1,1
+access_taller_crear_maquinas_wizard,taller.crear.maquinas.wizard,model_taller_crear_maquinas_wizard,base.group_user,1,1,1,1

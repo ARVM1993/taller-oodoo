@@ -1,0 +1,198 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id='view_maquinaria_search' model='ir.ui.view'>
+        <field name='name'>taller.maquinaria.search</field>
+        <field name='model'>taller.maquinaria</field>
+        <field name='arch' type='xml'>
+            <search>
+                <field name='name'/>
+                <field name='referencia'/>
+                <field name='cliente_taller_id'/>
+                <field name='modelo_maquina'/>
+                <field name='responsable'/>
+                <field name='estado'/>
+                <group expand='1' string='Agrupar por'>
+                    <filter name='group_by_cliente' string='Cliente' context="{'group_by': 'cliente_taller_id'}"/>
+                    <filter name='group_by_modelo' string='Modelo' context="{'group_by': 'modelo_maquina'}"/>
+                    <filter name='group_by_estado' string='Estado' context="{'group_by': 'estado'}"/>
+                    <filter name='group_by_responsable' string='Responsable' context="{'group_by': 'responsable'}"/>
+                </group>
+                <filter name='filter_fabricacion' string='En Fabricacion' domain="[('estado', '=', 'fabricacion')]"/>
+                <filter name='filter_terminada' string='Terminada' domain="[('estado', '=', 'terminada')]"/>
+                <filter name='filter_reparacion' string='En Reparacion' domain="[('estado', '=', 'reparacion')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id='action_taller_cliente' model='ir.actions.act_window'>
+        <field name='name'>Clientes</field>
+        <field name='res_model'>taller.cliente</field>
+        <field name='view_mode'>list,form</field>
+    </record>
+
+    <record id='action_maquinaria' model='ir.actions.act_window'>
+        <field name='name'>Todas las Maquinas</field>
+        <field name='res_model'>taller.maquinaria</field>
+        <field name='view_mode'>list,form</field>
+        <field name='context'>{'group_by': 'cliente_taller_id'}</field>
+        <field name='search_view_id' ref='view_maquinaria_search'/>
+    </record>
+
+    <record id='action_reparaciones' model='ir.actions.act_window'>
+        <field name='name'>Maquinas en Reparacion</field>
+        <field name='res_model'>taller.maquinaria</field>
+        <field name='view_mode'>list,form</field>
+        <field name='domain'>[('estado', '=', 'reparacion')]</field>
+        <field name='context'>{'group_by': 'cliente_taller_id'}</field>
+        <field name='search_view_id' ref='view_maquinaria_search'/>
+    </record>
+
+    <record id='action_crear_maquinas_wizard' model='ir.actions.act_window'>
+        <field name='name'>Crear multiples maquinas</field>
+        <field name='res_model'>taller.crear.maquinas.wizard</field>
+        <field name='view_mode'>form</field>
+        <field name='target'>new</field>
+    </record>
+
+    <menuitem id='menu_taller_root' name='Taller' web_icon='taller,static/description/icon.png' sequence='10'/>
+    <menuitem id='menu_taller_clientes' name='Clientes' parent='menu_taller_root' action='action_taller_cliente' sequence='1'/>
+    <menuitem id='menu_taller_maquinas' name='Todas las Maquinas' parent='menu_taller_root' action='action_maquinaria' sequence='2'/>
+    <menuitem id='menu_taller_reparaciones' name='Maquinas en Reparacion' parent='menu_taller_root' action='action_reparaciones' sequence='3'/>
+
+    <record id='view_taller_cliente_list' model='ir.ui.view'>
+        <field name='name'>taller.cliente.list</field>
+        <field name='model'>taller.cliente</field>
+        <field name='arch' type='xml'>
+            <list>
+                <field name='name'/>
+                <field name='cliente_id'/>
+                <field name='telefono'/>
+                <field name='email'/>
+                <field name='resumen_maquinas'/>
+                <field name='resumen_reparaciones'/>
+            </list>
+        </field>
+    </record>
+
+    <record id='view_taller_cliente_form' model='ir.ui.view'>
+        <field name='name'>taller.cliente.form</field>
+        <field name='model'>taller.cliente</field>
+        <field name='arch' type='xml'>
+            <form string='Cliente'>
+                <sheet>
+                    <div class='oe_button_box'>
+                        <button name='%(action_crear_maquinas_wizard)d'
+                                type='action'
+                                class='oe_stat_button'
+                                icon='fa-plus'
+                                context="{'default_cliente_taller_id': id}">
+                            <span class='o_stat_text'>Crear varias</span>
+                            <span class='o_stat_text'>maquinas</span>
+                        </button>
+                    </div>
+                    <div class='oe_title'>
+                        <h1>
+                            <field name='name' readonly='1'/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name='cliente_id' options="{'no_create': True}"/>
+                            <field name='telefono'/>
+                            <field name='email'/>
+                            <field name='direccion'/>
+                        </group>
+                        <group>
+                            <field name='resumen_maquinas'/>
+                            <field name='resumen_reparaciones'/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string='Maquinas'>
+                            <field name='maquinas_ids'>
+                                <list editable='bottom'>
+                                    <field name='modelo_maquina'/>
+                                    <field name='referencia'/>
+                                    <field name='estado'/>
+                                    <field name='responsable' required="[('estado', '=', 'reparacion')]"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id='view_crear_maquinas_wizard_form' model='ir.ui.view'>
+        <field name='name'>taller.crear.maquinas.wizard.form</field>
+        <field name='model'>taller.crear.maquinas.wizard</field>
+        <field name='arch' type='xml'>
+            <form string='Crear multiples maquinas'>
+                <group>
+                    <group>
+                        <field name='cliente_taller_id'/>
+                        <field name='modelo_maquina'/>
+                        <field name='cantidad'/>
+                    </group>
+                    <group>
+                        <field name='referencia_inicial' placeholder='Ej: REF001'/>
+                        <field name='estado'/>
+                        <field name='responsable' required="[('estado', '=', 'reparacion')]"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name='action_crear_maquinas'
+                            string='Crear Maquinas'
+                            type='object'
+                            class='btn-primary'/>
+                    <button string='Cancelar'
+                            class='btn-secondary'
+                            special='cancel'/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id='view_maquinaria_list' model='ir.ui.view'>
+        <field name='name'>taller.maquinaria.list</field>
+        <field name='model'>taller.maquinaria</field>
+        <field name='arch' type='xml'>
+            <list editable='bottom'>
+                <field name='name' string='Maquina'/>
+                <field name='modelo_referencia' string='Modelo y Referencia'/>
+                <field name='estado'/>
+                <field name='responsable' readonly='1'/>
+            </list>
+        </field>
+    </record>
+
+    <record id='view_maquinaria_form' model='ir.ui.view'>
+        <field name='name'>taller.maquinaria.form</field>
+        <field name='model'>taller.maquinaria</field>
+        <field name='arch' type='xml'>
+            <form string='Maquinaria'>
+                <sheet>
+                    <div class='oe_title'>
+                        <h1>
+                            <field name='name' readonly='1'/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name='cliente_taller_id' options="{'no_create': True}"/>
+                            <field name='referencia'/>
+                            <field name='modelo_maquina'/>
+                            <field name='telefono_cliente'/>
+                            <field name='email_cliente'/>
+                        </group>
+                        <group>
+                            <field name='estado'/>
+                            <field name='responsable' required="[('estado', '=', 'reparacion')]"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
