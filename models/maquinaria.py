@@ -1,22 +1,26 @@
 from odoo import fields, models, api
 from odoo.exceptions import ValidationError
 
+
 class TallerMaquinaria(models.Model):
     _name = 'taller.maquinaria'
     _description = 'Gestion maquinas'
-    _rec_name = 'modelo_referencia'
+    _rec_name = 'num_serie'
     _sql_constraints = [
-        ('referencia_uniq', 'unique(referencia)', 'El numero de referencia debe ser unico.'),
+        ('num_serie_uniq', 'unique(num_serie)', 'El numero de serie debe ser unico.'),
     ]
 
-    name = fields.Char(
-        string='Maquina',
-        compute='_compute_name',
-        store=True,
-        readonly=True
+    cantidad = fields.Integer(
+        string='Cantidad',
+        required=True,
+        default=1
     )
-    referencia = fields.Char(
-        string='Numero de referencia',
+    puerto = fields.Char(
+        string='Puerto',
+        required=True
+    )
+    num_serie = fields.Char(
+        string='N Serie',
         required=True
     )
     modelo_maquina = fields.Selection([
@@ -27,20 +31,13 @@ class TallerMaquinaria(models.Model):
         ('velite', 'VéLite'),
         ('ecolite_emv', 'EcoLite EMV'),
         ('router_elite', 'Router éLite'),
-    ], string='Modelo de maquina', required=True, default='modulite')
-
-    modelo_referencia = fields.Char(
-        string='Modelo y Referencia',
-        compute='_compute_modelo_referencia',
-        store=True
-    )
+    ], string='Modelo', required=True, default='modulite')
 
     cliente_taller_id = fields.Many2one(
         'taller.cliente',
         string='Cliente',
         required=True,
-        ondelete='cascade',
-        help='Cliente propietario de la maquina'
+        ondelete='cascade'
     )
     cliente_id = fields.Many2one(
         'res.partner',
@@ -49,43 +46,48 @@ class TallerMaquinaria(models.Model):
         readonly=True,
         store=True
     )
+    ns_cliente = fields.Char(
+        string='N/S Cliente',
+        help='Numero de serie del cliente'
+    )
 
-    responsable = fields.Many2one(
-        'res.users',
-        string='Responsable',
-        domain="[('groups_id.name', 'in', ['Taller'])]",
-        help='Usuario responsable (solo usuarios del grupo Taller)'
+    fecha_envio = fields.Date(
+        string='F. Envio',
+        help='Fecha de envio'
+    )
+
+    observaciones = fields.Text(
+        string='Observaciones'
+    )
+
+    conjunto = fields.Char(
+        string='Conjunto',
+        help='Conjunto al que pertenece (si procede)'
+    )
+    raspberry = fields.Char(
+        string='Raspberry',
+        help='Numero de Raspberry'
+    )
+    id_feig = fields.Char(
+        string='ID FEIG',
+        help='ID Feig'
+    )
+    version_pcb = fields.Char(
+        string='Version PCB',
+        help='Version de la PCB'
     )
 
     estado = fields.Selection([
         ('fabricacion', 'En fabricacion'),
         ('terminada', 'Terminada'),
         ('reparacion', 'Reparacion')
-    ], string='Estado de la maquinaria', required=True, default='fabricacion')
+    ], string='Estado', required=True, default='fabricacion')
 
-    telefono_cliente = fields.Char(
-        string='Telefono del cliente',
-        related='cliente_taller_id.telefono',
-        readonly=True
+    responsable = fields.Many2one(
+        'res.users',
+        string='Responsable',
+        domain="[('groups_id.name', 'in', ['Taller'])]"
     )
-    email_cliente = fields.Char(
-        string='Email del cliente',
-        related='cliente_taller_id.email',
-        readonly=True
-    )
-
-    @api.depends('cliente_taller_id')
-    def _compute_name(self):
-        for record in self:
-            cliente = record.cliente_taller_id.name or 'Sin cliente'
-            record.name = f"{cliente} ({record.id or 'Nuevo'})"
-
-    @api.depends('modelo_maquina', 'referencia')
-    def _compute_modelo_referencia(self):
-        for record in self:
-            modelo = dict(record._fields['modelo_maquina'].selection).get(record.modelo_maquina, '')
-            referencia = record.referencia or ''
-            record.modelo_referencia = f"{modelo} {referencia}".strip()
 
     @api.constrains('estado', 'responsable')
     def _check_responsable_reparacion(self):

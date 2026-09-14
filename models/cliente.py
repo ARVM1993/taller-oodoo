@@ -5,7 +5,7 @@ class TallerCliente(models.Model):
     _description = 'Cliente del taller'
     _rec_name = 'name'
     _sql_constraints = [
-        ('cliente_id_uniq', 'unique(cliente_id)', 'Esta compania ya tiene un registro en el taller.'),
+        ('cliente_id_uniq', 'unique(cliente_id)', 'Esta compañía ya tiene un registro en el taller.'),
     ]
 
     name = fields.Char(
@@ -16,10 +16,10 @@ class TallerCliente(models.Model):
     )
     cliente_id = fields.Many2one(
         'res.partner',
-        string='Compania',
+        string='Compañía',
         required=True,
         domain="[('is_company', '=', True)]",
-        help='Solo se pueden seleccionar companias'
+        help='Solo se pueden seleccionar compañías'
     )
     telefono = fields.Char(
         string='Telefono',
@@ -60,7 +60,7 @@ class TallerCliente(models.Model):
     @api.depends('cliente_id')
     def _compute_name(self):
         for record in self:
-            record.name = record.cliente_id.name or 'Sin compania'
+            record.name = record.cliente_id.name or 'Sin compañía'
 
     @api.depends('maquinas_ids', 'maquinas_ids.modelo_maquina')
     def _compute_resumen_maquinas(self):
