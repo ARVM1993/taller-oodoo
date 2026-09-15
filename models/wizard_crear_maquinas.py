@@ -16,14 +16,13 @@ class TallerCrearMaquinasWizard(models.TransientModel):
     )
 
     modelo_maquina = fields.Selection([
-        ('modulite', 'ModuLite'),
         ('consola_c10', 'Consola C10'),
         ('validadora_v5', 'Validadora V5'),
         ('validadora_v7', 'Validadora V7'),
         ('velite', 'VéLite'),
         ('ecolite_emv', 'EcoLite EMV'),
         ('router_elite', 'Router éLite'),
-    ], string='Modelo', required=True, default='modulite')
+    ], string='Modelo', required=True)
 
     cantidad = fields.Integer(
         string='Cantidad',
@@ -31,15 +30,16 @@ class TallerCrearMaquinasWizard(models.TransientModel):
         default=1
     )
 
-    puerto = fields.Char(
-        string='Puerto',
-        required=True
+    puerto_inicial = fields.Char(
+        string='Puerto inicial',
+        required=True,
+        help='Puerto inicial de 5 digitos (ej: 11111)'
     )
 
     num_serie_inicial = fields.Char(
         string='N Serie inicial',
         required=True,
-        default='0',
+        default='1',
         help='Numero inicial para los numeros de serie (ej: 1, 100, 500)'
     )
 
@@ -68,8 +68,17 @@ class TallerCrearMaquinasWizard(models.TransientModel):
                 'La cantidad debe ser mayor que 0.'
             )
 
+        if not self.puerto_inicial.isdigit():
+            raise ValidationError(
+                'El puerto inicial debe contener solo numeros.'
+            )
+
+        if len(self.puerto_inicial) != 5:
+            raise ValidationError(
+                'El puerto inicial debe tener exactamente 5 digitos.'
+            )
+
         codigos = {
-            'modulite': 'ml',
             'consola_c10': 'c10',
             'validadora_v5': 'v5',
             'validadora_v7': 'v7',
@@ -85,6 +94,14 @@ class TallerCrearMaquinasWizard(models.TransientModel):
         except ValueError:
             numero_inicial = 0
 
+        try:
+            puerto_inicial = int(self.puerto_inicial)
+        except ValueError:
+            puerto_inicial = 0
+
+        ultimo = self.env['taller.maquinaria'].search([], order='cantidad desc', limit=1)
+        siguiente = (ultimo.cantidad or 0) + 1
+
         maquinas_creadas = []
 
         for i in range(1, self.cantidad + 1):
@@ -95,15 +112,19 @@ class TallerCrearMaquinasWizard(models.TransientModel):
                 f"{(numero_inicial + i):05d}"
             )
 
+            puerto = str(puerto_inicial + i - 1).zfill(5)
+
             maquina = self.env['taller.maquinaria'].create({
                 'cliente_taller_id': self.cliente_taller_id.id,
                 'modelo_maquina': self.modelo_maquina,
-                'cantidad': 1,
-                'puerto': self.puerto,
+                'cantidad': siguiente,
+                'puerto': puerto,
                 'num_serie': num_serie,
                 'responsable': self.responsable.id if self.responsable else False,
                 'estado': self.estado,
             })
+
+            siguiente += 1
 
             maquinas_creadas.append(maquina.id)
 
